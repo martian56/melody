@@ -17,6 +17,11 @@ class EmailService:
     @classmethod
     def _send_email(cls, to_email: str, subject: str, html_content: str, text_content: Optional[str] = None) -> bool:
         """Send email using Gmail SMTP"""
+        # Check if email is enabled
+        if not settings.ENABLE_EMAIL:
+            logger.debug("Email sending is disabled. Email not sent.")
+            return False
+        
         if not settings.EMAIL_SENDER or not settings.APP_PASSWORD:
             logger.warning("Email configuration not set. Email not sent.")
             return False
@@ -37,7 +42,9 @@ class EmailService:
             msg.attach(html_part)
             
             # Send email using Gmail SMTP
-            with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            # Note: Some cloud platforms (like Render.com) block outbound SMTP connections
+            # Consider using an email service with API (SendGrid, Mailgun, AWS SES) for production
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
                 server.starttls()
                 server.login(settings.EMAIL_SENDER, settings.APP_PASSWORD)
                 server.send_message(msg)

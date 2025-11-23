@@ -59,6 +59,8 @@ class Settings(BaseSettings):
 
     EMAIL_SENDER: Optional[str] = None
     APP_PASSWORD: Optional[str] = None
+    # Set to False to disable email sending (useful if SMTP is blocked in production)
+    ENABLE_EMAIL: bool = True
 
     FRONTEND_URL: Optional[str] = "http://localhost:5173"
     
