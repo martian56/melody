@@ -3,7 +3,8 @@ try:
 except ImportError:
     from pydantic import BaseSettings
 
-from typing import Optional, List
+from typing import Optional, List, Union
+from pydantic import field_validator
 
 class Settings(BaseSettings):
     # App
@@ -32,8 +33,18 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None
     FROM_EMAIL: Optional[str] = None
     
-    # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # CORS - List of allowed origins (can be set via comma-separated string in .env)
+    # Example: CORS_ORIGINS=http://localhost:5173,https://melody.ufazien.com
+    CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://localhost:5173"]
+    
+    @field_validator('CORS_ORIGINS', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS_ORIGINS from comma-separated string or list"""
+        if isinstance(v, str):
+            # Split by comma and strip whitespace
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        return v
     
     # Pagination
     DEFAULT_PAGE_SIZE: int = 20

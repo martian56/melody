@@ -21,7 +21,15 @@ app = FastAPI(
 
 # CORS - must be added before other middleware
 # Note: When allow_credentials=True, cannot use ["*"] for origins
-cors_origins = settings.CORS_ORIGINS if settings.CORS_ORIGINS else ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
+# Build CORS origins list: include CORS_ORIGINS from config and FRONTEND_URL if set
+cors_origins = list(settings.CORS_ORIGINS) if settings.CORS_ORIGINS else []
+# Add FRONTEND_URL to CORS origins if it's set and not already included
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in cors_origins:
+    cors_origins.append(settings.FRONTEND_URL)
+# Fallback to localhost if no origins are configured
+if not cors_origins:
+    cors_origins = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
@@ -77,4 +85,8 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    return {"status": "healthy"}
+
+@app.head("/health")
+async def health_check_head():
     return {"status": "healthy"}
